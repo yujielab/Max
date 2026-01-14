@@ -15,175 +15,23 @@
                         当前存储：{{ providerLabel }} · 路径：{{ currentPath }}
                     </p>
                     <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-white/60">
-                        <span class="icloud-pill">
-                            {{ activation.completed ? '已激活' : '未激活' }}
-                        </span>
                         <span class="icloud-pill">{{ syncLabel }}</span>
                         <span class="icloud-pill">{{ isBusy ? '忙碌中' : '就绪' }}</span>
+                        <span class="icloud-pill">生产模式</span>
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
-                    <button class="icloud-button-secondary" @click="openActivation">
-                        {{ activation.completed ? '配置中心' : '开始配置' }}
-                    </button>
-                    <button class="icloud-button" @click="toggleCreateFolder" :disabled="activationOpen">
+                    <button class="icloud-button" @click="toggleCreateFolder">
                         创建文件夹
                     </button>
-                    <label class="icloud-button cursor-pointer" :class="{ 'opacity-50': activationOpen }">
+                    <label class="icloud-button cursor-pointer">
                         上传
-                        <input ref="fileInput" type="file" class="hidden" @change="handleUpload" :disabled="activationOpen" />
+                        <input ref="fileInput" type="file" class="hidden" @change="handleUpload" />
                     </label>
                 </div>
             </header>
 
-            <transition name="fade-slide" mode="out-in">
-                <section v-if="activationOpen" key="activation" class="glass-panel p-8">
-                    <div class="flex flex-col gap-8 lg:flex-row">
-                        <div class="flex-1 space-y-6">
-                            <div>
-                                <p class="text-xs uppercase tracking-[0.3em] text-white/40">首次激活</p>
-                                <h2 class="mt-3 text-3xl font-semibold">一键安装与配置</h2>
-                                <p class="mt-3 text-sm text-white/70">
-                                    选择存储类型，填入必要信息，系统将自动完成初始化。无需手动修改复杂配置。
-                                </p>
-                            </div>
-
-                            <div class="grid gap-4 md:grid-cols-2">
-                                <div class="glass-panel p-5">
-                                    <p class="text-sm text-white/60">推荐流程</p>
-                                    <ul class="mt-3 space-y-2 text-sm text-white/80">
-                                        <li class="flex items-center gap-2">
-                                            <span class="icloud-dot"></span>
-                                            选择存储驱动并快速完成配置
-                                        </li>
-                                        <li class="flex items-center gap-2">
-                                            <span class="icloud-dot"></span>
-                                            一键初始化目录，自动生成安全策略
-                                        </li>
-                                        <li class="flex items-center gap-2">
-                                            <span class="icloud-dot"></span>
-                                            激活后即可上传、同步与共享
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="glass-panel p-5">
-                                    <p class="text-sm text-white/60">体验预览</p>
-                                    <div class="mt-4 space-y-3 text-sm text-white/80">
-                                        <div class="flex items-center justify-between">
-                                            <span>自动检测</span>
-                                            <span class="icloud-badge">已启用</span>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <span>多云切换</span>
-                                            <span class="icloud-badge">可选</span>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <span>错误自愈</span>
-                                            <span class="icloud-badge">智能</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="glass-panel p-5">
-                                <p class="text-sm text-white/60">快速激活</p>
-                                <div class="mt-4 flex flex-wrap gap-3">
-                                    <button class="icloud-button-primary" @click="applyQuickSetup('local')">一键本地安装</button>
-                                    <button class="icloud-button-secondary" @click="applyQuickSetup('webdav')">快速 WebDAV</button>
-                                    <button class="icloud-button-secondary" @click="applyQuickSetup('s3')">快速 S3</button>
-                                </div>
-                                <p class="mt-3 text-xs text-white/50">
-                                    一键配置仅保存到浏览器本地，不会上传任何凭据。
-                                </p>
-                            </div>
-                        </div>
-
-                        <div class="flex w-full flex-col gap-4 lg:w-96">
-                            <div class="glass-panel p-5">
-                                <p class="text-xs uppercase tracking-[0.3em] text-white/40">配置向导</p>
-                                <div class="mt-4 space-y-4">
-                                    <div class="space-y-2">
-                                        <p class="text-sm text-white/70">选择存储类型</p>
-                                        <div class="grid gap-2">
-                                            <button
-                                                v-for="option in providerOptions"
-                                                :key="option.value"
-                                                class="icloud-option"
-                                                :class="{ 'is-active': activationDraft.provider === option.value }"
-                                                @click="activationDraft.provider = option.value"
-                                            >
-                                                <div>
-                                                    <p class="text-sm font-medium">{{ option.label }}</p>
-                                                    <p class="text-xs text-white/50">{{ option.description }}</p>
-                                                </div>
-                                                <span class="icloud-pill">{{ option.tag }}</span>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        <p class="text-sm text-white/70">配置参数</p>
-                                        <div v-if="activationDraft.provider === 'local'" class="space-y-3">
-                                            <input
-                                                v-model="activationDraft.localRoot"
-                                                type="text"
-                                                placeholder="存储目录 (默认 cloud-drive)"
-                                                class="icloud-input"
-                                            />
-                                            <p class="text-xs text-white/50">默认将文件保存到本地存储目录。</p>
-                                        </div>
-                                        <div v-else-if="activationDraft.provider === 'webdav'" class="space-y-3">
-                                            <input
-                                                v-model="activationDraft.webdavBaseUri"
-                                                type="text"
-                                                placeholder="WebDAV 地址"
-                                                class="icloud-input"
-                                            />
-                                            <div class="grid gap-3 sm:grid-cols-2">
-                                                <input v-model="activationDraft.webdavUsername" type="text" placeholder="用户名" class="icloud-input" />
-                                                <input v-model="activationDraft.webdavPassword" type="password" placeholder="密码" class="icloud-input" />
-                                            </div>
-                                        </div>
-                                        <div v-else class="space-y-3">
-                                            <input v-model="activationDraft.s3Region" type="text" placeholder="区域 (例如 ap-southeast-1)" class="icloud-input" />
-                                            <input v-model="activationDraft.s3Bucket" type="text" placeholder="Bucket 名称" class="icloud-input" />
-                                        </div>
-                                    </div>
-
-                                    <div class="rounded-2xl bg-white/5 p-4 text-xs text-white/60">
-                                        <p>配置预览</p>
-                                        <p class="mt-2">驱动：{{ activationPreviewLabel }}</p>
-                                        <p class="mt-1">路径：{{ activationPreviewPath }}</p>
-                                    </div>
-
-                                    <div v-if="activationError" class="rounded-2xl bg-icloud-pink/20 px-4 py-3 text-sm text-white">
-                                        {{ activationError }}
-                                    </div>
-
-                                    <div class="flex flex-wrap gap-3">
-                                        <button class="icloud-button-primary" @click="completeActivation">完成激活</button>
-                                        <button class="icloud-button-secondary" @click="cancelActivation">
-                                            暂不配置
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="glass-panel p-5">
-                                <p class="text-sm text-white/60">激活后你将获得</p>
-                                <ul class="mt-3 space-y-2 text-sm text-white/80">
-                                    <li class="flex items-center gap-2"><span class="icloud-dot"></span>一键上传与拖拽同步</li>
-                                    <li class="flex items-center gap-2"><span class="icloud-dot"></span>可视化目录管理</li>
-                                    <li class="flex items-center gap-2"><span class="icloud-dot"></span>错误实时提示与恢复</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </transition>
-
-            <transition name="fade-slide" mode="out-in">
-                <section v-else key="workspace" class="glass-panel p-6">
+            <section key="workspace" class="glass-panel p-6">
                     <div class="flex flex-col gap-6 lg:flex-row">
                         <aside class="flex w-full flex-col gap-4 lg:w-64">
                             <div class="text-xs uppercase tracking-[0.2em] text-white/40">工作区</div>
@@ -209,16 +57,8 @@
                                 <p class="text-xs text-white/60">连接存储</p>
                                 <div class="mt-3 flex flex-col gap-2 text-sm text-white">
                                     <div class="flex items-center justify-between">
-                                        <span>WebDAV</span>
-                                        <span class="text-white/60">{{ activation.webdavLabel }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span>S3</span>
-                                        <span class="text-white/60">{{ activation.s3Label }}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
                                         <span>本地</span>
-                                        <span class="text-white/60">{{ activation.localLabel }}</span>
+                                        <span class="text-white/60">在线</span>
                                     </div>
                                 </div>
                             </div>
@@ -353,10 +193,9 @@
                         </div>
                     </div>
                 </section>
-            </transition>
 
             <footer class="flex flex-wrap items-center justify-between gap-4 text-xs text-white/50">
-                <span>端到端加密 · 智能同步 · 多云加速</span>
+                <span>安全存储 · 清晰目录 · 稳定上传</span>
                 <span>Laravel 12 · Vue 3 · TailwindCSS</span>
             </footer>
         </div>
@@ -378,49 +217,7 @@ const creatingFolder = ref(false);
 const isUploading = ref(false);
 const fileInput = ref(null);
 const notices = ref([]);
-const activationOpen = ref(false);
-const activationError = ref('');
-const activationDraft = ref({
-    provider: 'local',
-    localRoot: 'cloud-drive',
-    webdavBaseUri: '',
-    webdavUsername: '',
-    webdavPassword: '',
-    s3Region: '',
-    s3Bucket: '',
-});
-const activation = ref({
-    completed: false,
-    provider: 'local',
-    config: {},
-    localLabel: '在线',
-    webdavLabel: '未连接',
-    s3Label: '未连接',
-});
 const lastAction = ref('');
-
-const activationStorageKey = 'cloudrive_activation_v1';
-
-const providerOptions = [
-    {
-        value: 'local',
-        label: '本地存储',
-        description: '最快速的本地目录模式',
-        tag: '推荐',
-    },
-    {
-        value: 'webdav',
-        label: 'WebDAV',
-        description: '接入外部 WebDAV 盘',
-        tag: '同步',
-    },
-    {
-        value: 's3',
-        label: 'S3 兼容存储',
-        description: '连接对象存储服务',
-        tag: '稳定',
-    },
-];
 
 const providerLabel = computed(() => getProviderLabel(provider.value));
 const syncLabel = computed(() => (loading.value ? '同步中' : '已同步'));
@@ -453,21 +250,7 @@ const parentPath = computed(() => {
     return segments.length === 0 ? '/' : `/${segments.join('/')}`;
 });
 
-const activationPreviewLabel = computed(() => getProviderLabel(activationDraft.value.provider));
-const activationPreviewPath = computed(() => {
-    if (activationDraft.value.provider === 'local') {
-        return activationDraft.value.localRoot || 'cloud-drive';
-    }
-    if (activationDraft.value.provider === 'webdav') {
-        return activationDraft.value.webdavBaseUri || '未填写地址';
-    }
-    return activationDraft.value.s3Bucket || '未填写 Bucket';
-});
-
 const fetchItems = async (path = currentPath.value) => {
-    if (activationOpen.value) {
-        return;
-    }
     loading.value = true;
     clearError();
     lastAction.value = 'fetch';
@@ -584,77 +367,6 @@ const retryLast = () => {
     }
 };
 
-const openActivation = () => {
-    activationError.value = '';
-    if (activation.value.completed) {
-        activationDraft.value = {
-            provider: activation.value.provider ?? 'local',
-            localRoot: activation.value.config?.localRoot ?? 'cloud-drive',
-            webdavBaseUri: activation.value.config?.webdavBaseUri ?? '',
-            webdavUsername: activation.value.config?.webdavUsername ?? '',
-            webdavPassword: '',
-            s3Region: activation.value.config?.s3Region ?? '',
-            s3Bucket: activation.value.config?.s3Bucket ?? '',
-        };
-    }
-    activationOpen.value = true;
-};
-
-const cancelActivation = () => {
-    activationError.value = '';
-    activationOpen.value = false;
-    if (items.value.length === 0) {
-        fetchItems('/');
-    }
-};
-
-const applyQuickSetup = (providerType) => {
-    activationDraft.value = {
-        provider: providerType,
-        localRoot: 'cloud-drive',
-        webdavBaseUri: providerType === 'webdav' ? 'https://dav.example.com/remote.php/dav/files' : '',
-        webdavUsername: '',
-        webdavPassword: '',
-        s3Region: providerType === 's3' ? 'ap-southeast-1' : '',
-        s3Bucket: providerType === 's3' ? 'icloud-demo' : '',
-    };
-};
-
-const completeActivation = () => {
-    activationError.value = '';
-    if (!activationDraft.value.provider) {
-        activationError.value = '请选择存储类型。';
-        return;
-    }
-    if (activationDraft.value.provider === 'webdav' && !activationDraft.value.webdavBaseUri) {
-        activationError.value = '请填写 WebDAV 地址。';
-        return;
-    }
-    if (activationDraft.value.provider === 's3' && !activationDraft.value.s3Bucket) {
-        activationError.value = '请填写 S3 Bucket。';
-        return;
-    }
-
-    activation.value = {
-        completed: true,
-        provider: activationDraft.value.provider,
-        config: {
-            localRoot: activationDraft.value.localRoot,
-            webdavBaseUri: activationDraft.value.webdavBaseUri,
-            webdavUsername: activationDraft.value.webdavUsername,
-            s3Region: activationDraft.value.s3Region,
-            s3Bucket: activationDraft.value.s3Bucket,
-        },
-        localLabel: activationDraft.value.provider === 'local' ? '已启用' : '待命',
-        webdavLabel: activationDraft.value.provider === 'webdav' ? '已启用' : '待命',
-        s3Label: activationDraft.value.provider === 's3' ? '已启用' : '待命',
-    };
-
-    persistActivation();
-    activationOpen.value = false;
-    pushNotice('success', '激活成功', '配置已保存到本地，随时可重新修改。');
-};
-
 const formatSize = (size) => {
     if (!size) {
         return '0 B';
@@ -703,12 +415,6 @@ const requestJson = async (url, fallbackMessage, options = {}) => {
 };
 
 const getProviderLabel = (value) => {
-    if (value === 's3') {
-        return 'Amazon S3';
-    }
-    if (value === 'webdav') {
-        return 'WebDAV';
-    }
     return '本地存储';
 };
 
@@ -733,29 +439,7 @@ const dismissNotice = (id) => {
     notices.value = notices.value.filter((notice) => notice.id !== id);
 };
 
-const persistActivation = () => {
-    localStorage.setItem(activationStorageKey, JSON.stringify(activation.value));
-};
-
-const loadActivation = () => {
-    try {
-        const stored = JSON.parse(localStorage.getItem(activationStorageKey));
-        if (stored?.completed) {
-            activation.value = {
-                ...activation.value,
-                ...stored,
-            };
-            activationOpen.value = false;
-        } else {
-            activationOpen.value = true;
-        }
-    } catch {
-        activationOpen.value = true;
-    }
-};
-
 onMounted(() => {
-    loadActivation();
     fetchItems('/');
 });
 </script>
