@@ -7,6 +7,7 @@ use Illuminate\Http\UploadedFile;
 class CloudStorageManager implements StorageGateway
 {
     public function __construct(
+        private readonly LocalStorage $local,
         private readonly WebDavStorage $webDav,
         private readonly S3Storage $s3,
         private readonly string $defaultDriver
@@ -30,8 +31,10 @@ class CloudStorageManager implements StorageGateway
 
     private function driver(): StorageGateway
     {
-        return $this->defaultDriver === 'webdav'
-            ? $this->webDav
-            : $this->s3;
+        return match ($this->defaultDriver) {
+            'webdav' => $this->webDav,
+            's3' => $this->s3,
+            default => $this->local,
+        };
     }
 }

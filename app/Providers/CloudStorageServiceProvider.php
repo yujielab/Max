@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\CloudStorageManager;
+use App\Services\LocalStorage;
 use App\Services\S3Storage;
 use App\Services\StorageGateway;
 use App\Services\WebDavStorage;
@@ -12,6 +13,10 @@ class CloudStorageServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(LocalStorage::class, function () {
+            return new LocalStorage(config('icloud.local'));
+        });
+
         $this->app->singleton(WebDavStorage::class, function () {
             return new WebDavStorage(config('icloud.webdav'));
         });
@@ -22,6 +27,7 @@ class CloudStorageServiceProvider extends ServiceProvider
 
         $this->app->singleton(CloudStorageManager::class, function ($app) {
             return new CloudStorageManager(
+                $app->make(LocalStorage::class),
                 $app->make(WebDavStorage::class),
                 $app->make(S3Storage::class),
                 config('icloud.default')

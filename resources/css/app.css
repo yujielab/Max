@@ -20,4 +20,16 @@
     .icloud-nav-item {
         @apply flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white;
     }
+
+    .icloud-input {
+        @apply w-full max-w-xs rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm text-white outline-none transition placeholder:text-white/40 focus:border-white/30;
+    }
+
+    .icloud-file-row {
+        @apply flex w-full items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-left transition hover:bg-white/10;
+    }
+
+    .icloud-badge {
+        @apply rounded-full bg-white/10 px-3 py-1 text-xs text-white/70;
+    }
 }

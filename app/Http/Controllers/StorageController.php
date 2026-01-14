@@ -16,17 +16,14 @@ class StorageController extends Controller
     {
         $path = $request->string('path', '/')->toString();
 
-        return response()->json([
-            'path' => $path,
-            'items' => $this->storage->list($path),
-        ]);
+        return response()->json($this->storage->list($path));
     }
 
     public function createFolder(Request $request): JsonResponse
     {
         $data = $request->validate([
             'path' => ['required', 'string'],
-            'name' => ['required', 'string'],
+            'name' => ['required', 'string', 'max:100', 'regex:/^[^\\\\\\/]+$/u'],
         ]);
 
         $folder = $this->storage->createFolder($data['path'], $data['name']);
