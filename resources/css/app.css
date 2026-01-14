@@ -14,22 +14,77 @@
     }
 
     .icloud-button {
-        @apply rounded-full bg-white/15 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-black/30 transition hover:bg-white/25;
+        @apply rounded-full bg-white/15 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-black/30 transition duration-300 hover:bg-white/25 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50;
+    }
+
+    .icloud-button-primary {
+        @apply rounded-full bg-icloud-blue/80 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-icloud-blue/30 transition duration-300 hover:bg-icloud-blue hover:-translate-y-0.5;
+    }
+
+    .icloud-button-secondary {
+        @apply rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white/80 transition duration-300 hover:border-white/40 hover:bg-white/10 hover:text-white;
     }
 
     .icloud-nav-item {
-        @apply flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white;
+        @apply flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-white/80 transition duration-300 hover:bg-white/10 hover:text-white;
     }
 
     .icloud-input {
-        @apply w-full max-w-xs rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm text-white outline-none transition placeholder:text-white/40 focus:border-white/30;
+        @apply w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm text-white outline-none transition duration-300 placeholder:text-white/40 focus:border-white/30;
     }
 
     .icloud-file-row {
-        @apply flex w-full items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-left transition hover:bg-white/10;
+        @apply flex w-full items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-left transition duration-300 hover:bg-white/10;
     }
 
     .icloud-badge {
         @apply rounded-full bg-white/10 px-3 py-1 text-xs text-white/70;
+    }
+
+    .icloud-pill {
+        @apply rounded-full bg-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/60;
+    }
+
+    .icloud-dot {
+        @apply h-2 w-2 rounded-full bg-icloud-blue;
+    }
+
+    .icloud-option {
+        @apply flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left transition duration-300 hover:border-white/30 hover:bg-white/10;
+    }
+
+    .icloud-option.is-active {
+        @apply border-icloud-blue/70 bg-icloud-blue/10;
+    }
+
+    .error-panel {
+        @apply flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-icloud-pink/30 bg-icloud-pink/15 px-4 py-3 text-sm text-white;
+    }
+}
+
+@layer utilities {
+    .fade-slide-enter-active,
+    .fade-slide-leave-active {
+        transition: all 0.3s ease;
+    }
+
+    .fade-slide-enter-from,
+    .fade-slide-leave-to {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    .animate-slow-float {
+        animation: slow-float 8s ease-in-out infinite;
+    }
+
+    @keyframes slow-float {
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-16px);
+        }
     }
 }
