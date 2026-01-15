@@ -48,6 +48,8 @@ cp .env.example .env
 php artisan key:generate
 ```
 
+> 本仓库提供的 `artisan` 会在缺少 Laravel 框架文件时给出提示。若需完整运行后端，请在完整的 Laravel 项目中使用这些代码，或先安装 Laravel 依赖（`composer install`）并补齐 `vendor/` 与 `bootstrap/` 目录。
+
 3. 启动开发服务
 
 ```bash
@@ -106,6 +108,8 @@ npm run build
 cp .env.example .env
 php artisan key:generate
 ```
+
+> 若缺少 Laravel 框架文件，请先在项目中安装依赖并确保存在 `vendor/` 与 `bootstrap/` 目录。
 
 在 `.env` 中设置存储根目录，例如：
 
