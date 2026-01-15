@@ -57,30 +57,50 @@ npm run dev
 
 访问 `http://127.0.0.1:8000` 查看界面。
 
-## 生产部署（推荐流程）
+## 生产部署（逐项检查与优化版）
 
-### 1. 服务器环境
+> 目标：一步一步确认环境、依赖、构建产物、权限与服务都可用，避免线上部署遗漏。
+
+### 1. 服务器前置检查
+
+```bash
+lsb_release -a
+php -v
+composer -V
+node -v
+npm -v
+```
+
+确保系统与版本符合要求：
 
 - Ubuntu 22.04 / Debian 12
 - PHP 8.2+、Composer、Node.js 18+
 - Nginx + PHP-FPM
 
-### 2. 拉取项目
+### 2. 拉取代码并确认分支
 
 ```bash
 git clone <your-repo-url> /var/www/clouddrive
 cd /var/www/clouddrive
+git status -sb
 ```
 
-### 3. 安装依赖并构建
+### 3. 安装后端依赖（生产优化）
 
 ```bash
 composer install --no-dev --optimize-autoloader
+```
+
+### 4. 安装前端依赖并构建静态资源
+
+```bash
 npm install
 npm run build
 ```
 
-### 4. 配置环境变量
+> 若你只在服务器做一次构建，可将 `node_modules` 缓存到部署流程中，减少重复安装。
+
+### 5. 生成配置并完善环境变量
 
 ```bash
 cp .env.example .env
@@ -93,14 +113,28 @@ php artisan key:generate
 ICLOUD_LOCAL_ROOT=cloud-drive
 ```
 
-### 5. 目录权限
+如需调整日志级别、环境模式，可继续补充：
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+```
+
+### 6. 目录权限与可写目录核对
 
 ```bash
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 ```
 
-### 6. Nginx 示例配置
+可选验证（确保可写）：
+
+```bash
+sudo -u www-data test -w storage && echo "storage writable"
+sudo -u www-data test -w bootstrap/cache && echo "cache writable"
+```
+
+### 7. Nginx 示例配置（生产建议）
 
 ```nginx
 server {
@@ -125,11 +159,18 @@ server {
 }
 ```
 
-完成后重启服务：
+### 8. 重载服务并验证
 
 ```bash
 sudo systemctl restart php8.2-fpm
 sudo systemctl reload nginx
+```
+
+验证接口与前端资源：
+
+```bash
+curl -I http://your-domain.com
+curl -I http://your-domain.com/api/storage/items
 ```
 
 ## API 说明
