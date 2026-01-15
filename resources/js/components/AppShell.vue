@@ -159,7 +159,7 @@
                                     </button>
 
                                     <button
-                                        v-for="item in items"
+                                        v-for="item in sortedItems"
                                         :key="item.path"
                                         class="icloud-file-row group"
                                         @click="item.type === 'folder' ? jumpTo(item.path) : null"
@@ -222,6 +222,14 @@ const lastAction = ref('');
 const providerLabel = computed(() => getProviderLabel(provider.value));
 const syncLabel = computed(() => (loading.value ? '同步中' : '已同步'));
 const isBusy = computed(() => loading.value || creatingFolder.value || isUploading.value);
+const sortedItems = computed(() => {
+    return [...items.value].sort((left, right) => {
+        if (left.type !== right.type) {
+            return left.type === 'folder' ? -1 : 1;
+        }
+        return left.name.localeCompare(right.name, 'zh-Hans-CN', { numeric: true });
+    });
+});
 
 const breadcrumbs = computed(() => {
     const normalized = currentPath.value === '/' ? '' : currentPath.value.replace(/^\//, '');
