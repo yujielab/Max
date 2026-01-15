@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,6 +15,8 @@ class LocalStorage implements StorageGateway
     )
     {
     }
+
+    private ?FilesystemAdapter $filesystem = null;
 
     public function list(string $path): array
     {
@@ -35,14 +38,17 @@ class LocalStorage implements StorageGateway
             ];
         }
 
+        $totalSize = 0;
         foreach ($files as $file) {
+            $size = $disk->size($file);
             $items[] = [
                 'type' => 'file',
                 'name' => basename($file),
                 'path' => $this->displayPath($file),
-                'size' => $disk->size($file),
+                'size' => $size,
                 'updated_at' => $this->formatTimestamp($disk->lastModified($file)),
             ];
+            $totalSize += $size;
         }
 
         usort($items, function (array $left, array $right) {
@@ -52,10 +58,6 @@ class LocalStorage implements StorageGateway
 
             return $left['type'] === 'folder' ? -1 : 1;
         });
-
-        $totalSize = array_sum(array_map(function (array $item) {
-            return $item['type'] === 'file' ? $item['size'] : 0;
-        }, $items));
 
         return [
             'provider' => $this->provider,
@@ -113,7 +115,11 @@ class LocalStorage implements StorageGateway
 
     private function disk()
     {
-        return Storage::disk('local');
+        if ($this->filesystem === null) {
+            $this->filesystem = Storage::disk('local');
+        }
+
+        return $this->filesystem;
     }
 
     private function ensureDirectory(string $path): void

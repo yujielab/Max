@@ -1,6 +1,6 @@
 # CloudDrive · Apple 风格网盘
 
-一个具备完整文件管理流程的轻量云盘项目，提供 Apple 风格玻璃质感界面、目录浏览、创建文件夹、上传文件、路径面包屑与存储统计。后端使用 Laravel 风格的 API，前端为 Vue 3 + Tailwind CSS。
+CloudDrive 是一个具备完整文件管理流程的轻量云盘项目，提供 Apple 风格玻璃质感界面、目录浏览、创建文件夹、上传文件、路径面包屑与存储统计。后端基于 Laravel 10，前端为 Vue 3 + Tailwind CSS。
 
 ## 功能特性
 
@@ -14,7 +14,7 @@
 
 ## 技术栈
 
-- 后端：Laravel 风格路由 + 服务层（PHP 8.2+）
+- 后端：Laravel 10（PHP 8.2+）
 - 前端：Vue 3、Vite、Tailwind CSS
 
 ## 目录说明
@@ -24,33 +24,60 @@
 - `config/icloud.php`：存储相关配置
 - `resources/js/components`：前端主界面
 - `resources/css`：Tailwind 及组件样式
+- `public/`：HTTP 入口与静态资源
 
-## 环境变量
+## 环境变量（完整模板）
+
+查看 `.env.example` 并按需修改：
 
 ```env
-# 本地存储根目录（相对 storage/app）
+APP_NAME="CloudDrive"
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://127.0.0.1:8000
+APP_TIMEZONE=Asia/Shanghai
+APP_LOCALE=zh_CN
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=zh_CN
+
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+
+CACHE_DRIVER=file
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+
+CORS_ALLOWED_ORIGINS=*
 ICLOUD_LOCAL_ROOT=cloud-drive
+ASSET_URL=
 ```
 
-## 本地开发
+## 本地开发（开箱即用版）
 
-1. 安装依赖
+> 适合第一次启动或本地调试：包含 Laravel 启动文件、配置与默认目录。
+
+1. **安装依赖**
 
 ```bash
 composer install
 npm install
 ```
 
-2. 配置环境
+2. **生成环境文件**
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-> 本仓库提供的 `artisan` 会在缺少 Laravel 框架文件时给出提示。若需完整运行后端，请在完整的 Laravel 项目中使用这些代码，或先安装 Laravel 依赖（`composer install`）并补齐 `vendor/` 与 `bootstrap/` 目录。
+> 如需切换数据库，请更新 `.env` 的 `DB_CONNECTION` 与 `DB_DATABASE`。
 
-3. 启动开发服务
+3. **启动服务**
 
 ```bash
 php artisan serve
@@ -59,86 +86,64 @@ npm run dev
 
 访问 `http://127.0.0.1:8000` 查看界面。
 
-## 生产部署（逐项检查与优化版）
+## 生产部署（全流程检查版）
 
-> 目标：一步一步确认环境、依赖、构建产物、权限与服务都可用，避免线上部署遗漏。
+> 目标：确保依赖、构建、权限与性能优化全部就绪。
 
-### 1. 服务器前置检查
+### 1. 环境准备
 
 ```bash
-lsb_release -a
 php -v
 composer -V
 node -v
 npm -v
 ```
 
-确保系统与版本符合要求：
+建议版本：PHP 8.2+ / Node 18+ / Nginx + PHP-FPM。
 
-- Ubuntu 22.04 / Debian 12
-- PHP 8.2+、Composer、Node.js 18+
-- Nginx + PHP-FPM
-
-### 2. 拉取代码并确认分支
+### 2. 拉取代码并安装依赖
 
 ```bash
 git clone <your-repo-url> /var/www/clouddrive
 cd /var/www/clouddrive
-git status -sb
-```
-
-### 3. 安装后端依赖（生产优化）
-
-```bash
 composer install --no-dev --optimize-autoloader
-```
-
-### 4. 安装前端依赖并构建静态资源
-
-```bash
 npm install
 npm run build
 ```
 
-> 若你只在服务器做一次构建，可将 `node_modules` 缓存到部署流程中，减少重复安装。
-
-### 5. 生成配置并完善环境变量
+### 3. 配置环境变量
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-> 若缺少 Laravel 框架文件，请先在项目中安装依赖并确保存在 `vendor/` 与 `bootstrap/` 目录。
+修改 `.env`：
 
-在 `.env` 中设置存储根目录，例如：
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `APP_URL=https://your-domain.com`
+- `ICLOUD_LOCAL_ROOT=cloud-drive`（或你希望的目录）
 
-```env
-ICLOUD_LOCAL_ROOT=cloud-drive
-```
-
-如需调整日志级别、环境模式，可继续补充：
-
-```env
-APP_ENV=production
-APP_DEBUG=false
-```
-
-### 6. 目录权限与可写目录核对
+### 4. 目录权限
 
 ```bash
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 ```
 
-可选验证（确保可写）：
+### 5. 缓存与性能优化
 
 ```bash
-sudo -u www-data test -w storage && echo "storage writable"
-sudo -u www-data test -w bootstrap/cache && echo "cache writable"
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan optimize
 ```
 
-### 7. Nginx 示例配置（生产建议）
+> 如需回滚缓存：`php artisan optimize:clear`。
+
+### 6. Nginx 示例配置
 
 ```nginx
 server {
@@ -163,18 +168,18 @@ server {
 }
 ```
 
-### 8. 重载服务并验证
+### 7. 重新加载服务并验证
 
 ```bash
 sudo systemctl restart php8.2-fpm
 sudo systemctl reload nginx
 ```
 
-验证接口与前端资源：
+验证：
 
 ```bash
-curl -I http://your-domain.com
-curl -I http://your-domain.com/api/storage/items
+curl -I https://your-domain.com
+curl -I https://your-domain.com/api/storage/items
 ```
 
 ## API 说明
