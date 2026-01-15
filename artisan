@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+$autoload = __DIR__ . '/vendor/autoload.php';
+$bootstrap = __DIR__ . '/bootstrap/app.php';
+
+if (!file_exists($autoload) || !file_exists($bootstrap)) {
+    fwrite(
+        STDERR,
+        "Artisan is unavailable because the Laravel bootstrap files are missing.\n" .
+        "Install the full Laravel framework (composer install) or run this code inside a Laravel project.\n"
+    );
+    exit(1);
+}
+
+require $autoload;
+$app = require $bootstrap;
+
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+
+$status = $kernel->handle(
+    $input = new Symfony\Component\Console\Input\ArgvInput(),
+    new Symfony\Component\Console\Output\ConsoleOutput()
+);
+
+$kernel->terminate($input, $status);
+
+exit($status);
